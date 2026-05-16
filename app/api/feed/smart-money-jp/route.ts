@@ -1,8 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withX402 } from "x402-next";
 import { getSmartMoneyJpData } from "@/lib/nansen";
 import { generateSmartMoneyJpSummary } from "@/lib/claude";
 import { getCache, setCache, TTL } from "@/lib/cache";
 import { today } from "@/lib/utils";
+import { PAYMENT_ADDRESS, FACILITATOR, routeConfig } from "@/lib/x402";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,7 +36,7 @@ interface SmartMoneyJpResponse {
 
 const CACHE_KEY = "smart-money-jp";
 
-export async function GET() {
+async function handler(_req: NextRequest): Promise<NextResponse> {
   const cached = await getCache<SmartMoneyJpResponse>(CACHE_KEY);
   if (cached) {
     return NextResponse.json(cached, {
@@ -48,7 +50,6 @@ export async function GET() {
   const top_buys = data.smart_money_activities.filter((a) => a.action === "buy").slice(0, 3).map((a) => a.token);
   const top_sells = data.smart_money_activities.filter((a) => a.action === "sell").slice(0, 3).map((a) => a.token);
   const active_wallets = data.smart_money_activities.reduce((sum, a) => sum + a.wallet_count, 0);
-
   const net_inflow_usd = data.jp_exchange_flows.reduce((sum, f) => sum + f.net_flow_usd, 0);
   const market_signal = net_inflow_usd > 1_000_000 ? "bullish" : net_inflow_usd < -1_000_000 ? "bearish" : "neutral";
 
@@ -57,11 +58,7 @@ export async function GET() {
     region: "JP",
     summary_ja,
     jp_exchange_flows: data.jp_exchange_flows,
-    smart_money: {
-      top_buys,
-      top_sells,
-      active_wallets,
-    },
+    smart_money: { top_buys, top_sells, active_wallets },
     alerts: data.scored_alerts.slice(0, 5),
     market_signal,
     data_sources: ["nansen"],
@@ -73,3 +70,5 @@ export async function GET() {
     headers: { "Cache-Control": `public, max-age=${TTL.SMART_MONEY}, stale-while-revalidate=60` },
   });
 }
+
+export const GET = withX402(handler, PAYMENT_ADDRESS, routeConfig("$0.15", "日本関連スマートマネー動向"), FACILITATOR);

@@ -1,8 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withX402 } from "x402-next";
 import { getWeeklyData } from "@/lib/nansen";
 import { generateWeeklyReport } from "@/lib/claude";
 import { getCache, setCache, TTL } from "@/lib/cache";
 import { today } from "@/lib/utils";
+import { PAYMENT_ADDRESS, FACILITATOR, routeConfig } from "@/lib/x402";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,7 +25,7 @@ interface WeeklyReportResponse {
 
 const CACHE_KEY = "weekly-report";
 
-export async function GET() {
+async function handler(_req: NextRequest): Promise<NextResponse> {
   const cached = await getCache<WeeklyReportResponse>(CACHE_KEY);
   if (cached) {
     return NextResponse.json(cached, {
@@ -33,7 +35,6 @@ export async function GET() {
 
   const data = await getWeeklyData();
   const report_md = await generateWeeklyReport(data);
-
   const net_inflow_usd = data.exchange_flows.reduce((sum, f) => sum + f.net_flow_usd, 0);
 
   const response: WeeklyReportResponse = {
@@ -56,3 +57,5 @@ export async function GET() {
     headers: { "Cache-Control": `public, max-age=${TTL.WEEKLY}, stale-while-revalidate=300` },
   });
 }
+
+export const GET = withX402(handler, PAYMENT_ADDRESS, routeConfig("$0.50", "週次詳細レポート"), FACILITATOR);

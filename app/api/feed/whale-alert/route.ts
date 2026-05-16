@@ -1,5 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withX402 } from "x402-next";
 import { getWhaleData } from "@/lib/nansen";
+import { PAYMENT_ADDRESS, FACILITATOR, routeConfig } from "@/lib/x402";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,11 +24,9 @@ interface WhaleAlertResponse {
   data_sources: string[];
 }
 
-// No cache for whale alerts - always real-time
-export async function GET() {
+async function handler(_req: NextRequest): Promise<NextResponse> {
   const data = await getWhaleData();
 
-  // Smart money transfers first
   const sorted = [...data.transfers].sort((a, b) => {
     if (a.is_smart_money !== b.is_smart_money) return a.is_smart_money ? -1 : 1;
     return b.amount_usd - a.amount_usd;
@@ -44,3 +44,5 @@ export async function GET() {
     headers: { "Cache-Control": "no-store" },
   });
 }
+
+export const GET = withX402(handler, PAYMENT_ADDRESS, routeConfig("$0.20", "クジラアラート（リアルタイム）"), FACILITATOR);
