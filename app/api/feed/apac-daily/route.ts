@@ -4,7 +4,7 @@ import { getApacData } from "@/lib/nansen";
 import { generateApacSummary } from "@/lib/claude";
 import { getCache, setCache, TTL } from "@/lib/cache";
 import { today } from "@/lib/utils";
-import { PAY_TO, BASE_NETWORK, x402Server } from "@/lib/x402";
+import { PAY_TO_BASE, PAY_TO_SOLANA, BASE_NETWORK, SOLANA_NETWORK, x402Server } from "@/lib/x402";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -77,12 +77,20 @@ async function handler(_req: NextRequest): Promise<NextResponse> {
 export const GET = withX402(
   handler,
   {
-    accepts: {
-      scheme: "exact",
-      payTo: PAY_TO,
-      price: "$0.10",
-      network: BASE_NETWORK,
-    },
+    accepts: [
+      {
+        scheme: "exact",
+        payTo: PAY_TO_BASE,
+        price: "$0.10",
+        network: BASE_NETWORK,
+      },
+      {
+        scheme: "exact",
+        payTo: PAY_TO_SOLANA,
+        price: "$0.10",
+        network: SOLANA_NETWORK,
+      },
+    ],
     description: "APAC日次スマートマネーサマリー（Claude日本語生成）",
   },
   x402Server,

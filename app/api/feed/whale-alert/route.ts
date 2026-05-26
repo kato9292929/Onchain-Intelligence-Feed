@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withX402 } from "@x402/next";
 import { getWhaleData } from "@/lib/nansen";
-import { PAY_TO, BASE_NETWORK, x402Server } from "@/lib/x402";
+import { PAY_TO_BASE, PAY_TO_SOLANA, BASE_NETWORK, SOLANA_NETWORK, x402Server } from "@/lib/x402";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -48,12 +48,20 @@ async function handler(_req: NextRequest): Promise<NextResponse> {
 export const GET = withX402(
   handler,
   {
-    accepts: {
-      scheme: "exact",
-      payTo: PAY_TO,
-      price: "$0.20",
-      network: BASE_NETWORK,
-    },
+    accepts: [
+      {
+        scheme: "exact",
+        payTo: PAY_TO_BASE,
+        price: "$0.20",
+        network: BASE_NETWORK,
+      },
+      {
+        scheme: "exact",
+        payTo: PAY_TO_SOLANA,
+        price: "$0.20",
+        network: SOLANA_NETWORK,
+      },
+    ],
     description: "クジラアラート・大口ウォレット動向（$100K以上、リアルタイム）",
   },
   x402Server,

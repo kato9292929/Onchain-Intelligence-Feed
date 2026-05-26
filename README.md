@@ -17,9 +17,12 @@ Nansen × Claude APIで生成するAPAC日本語オンチェーンインテリ�
 
 本プロジェクトは **x402 v2** を使用しています。
 
-- ネットワーク識別子: CAIP-2形式 (`eip155:8453` = Base mainnet)
-- 決済トークン: USDC on Base
+- ネットワーク識別子: CAIP-2形式
+  - Base mainnet: `eip155:8453`
+  - Solana mainnet: `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp`
+- 決済トークン: USDC on Base / USDC on Solana
 - Facilitator: Coinbase Developer Platform (CDP)
+- 各エンドポイント: Base + Solana の2-leg accepts
 
 ### v1 との違い
 
@@ -48,7 +51,9 @@ cp .env.example .env.local
 | `CDP_API_KEY_ID` | CDP APIキー ID (UUID形式) | [CDP Console](https://portal.cdp.coinbase.com) |
 | `CDP_API_KEY_SECRET` | CDP APIキー Secret (base64) | 同上 |
 | `FACILITATOR_URL` | `https://api.cdp.coinbase.com/platform/v2/x402` | 固定値 |
-| `WALLET_ADDRESS` | 受領ウォレットアドレス (Base EVM) | 自分のウォレット |
+| `WALLET_ADDRESS_BASE` | 受領ウォレットアドレス (Base EVM) | 自分のEVMウォレット |
+| `WALLET_ADDRESS_SOLANA` | 受領ウォレットアドレス (Solana) | 自分のSolanaウォレット |
+| `WALLET_ADDRESS` | フォールバック (WALLET_ADDRESS_BASE 未設定時) | 任意 |
 | `KV_REST_API_URL` | Upstash Redis URL | Vercel Storage |
 | `KV_REST_API_TOKEN` | Upstash Redis Token | 同上 |
 | `CRON_SECRET` | Cronジョブ保護シークレット | `openssl rand -hex 32` |
@@ -61,8 +66,12 @@ cp .env.example .env.local
 
 ### 3. 受領ウォレット
 
-Base mainnet対応のウォレットアドレスを `WALLET_ADDRESS` に設定。  
-デフォルト: `0xC67d94504696960bA0f2e7C3FeE703950734c00A`
+各チェーンのウォレットアドレスを設定:
+
+| 変数 | チェーン | デフォルト |
+|------|----------|-----------|
+| `WALLET_ADDRESS_BASE` | Base (EVM) | `0xC67d94504696960bA0f2e7C3FeE703950734c00A` |
+| `WALLET_ADDRESS_SOLANA` | Solana | `4s8XQC2WzRfgH8Xiep7ybnCW11VKRCMwxQF6jknx3VPf` |
 
 ### 4. ローカル起動
 

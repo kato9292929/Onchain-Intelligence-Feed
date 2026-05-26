@@ -15,6 +15,7 @@
     "@x402/core": "latest",
     "@x402/evm": "latest",
     "@x402/next": "latest",
+    "@x402/svm": "^2.13.0",
     "next": "15.3.9",
     "react": "^19",
     "react-dom": "^19"
