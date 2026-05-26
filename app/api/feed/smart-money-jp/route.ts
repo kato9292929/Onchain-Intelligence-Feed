@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withX402 } from "x402-next";
+import { withX402 } from "@x402/next";
 import { getSmartMoneyJpData } from "@/lib/nansen";
 import { generateSmartMoneyJpSummary } from "@/lib/claude";
 import { getCache, setCache, TTL } from "@/lib/cache";
 import { today } from "@/lib/utils";
-import { PAYMENT_ADDRESS, FACILITATOR, routeConfig } from "@/lib/x402";
+import { PAY_TO, BASE_NETWORK, x402Server } from "@/lib/x402";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -71,4 +71,16 @@ async function handler(_req: NextRequest): Promise<NextResponse> {
   });
 }
 
-export const GET = withX402(handler, PAYMENT_ADDRESS, routeConfig("$0.15", "日本関連スマートマネー動向"), FACILITATOR);
+export const GET = withX402(
+  handler,
+  {
+    accepts: {
+      scheme: "exact",
+      payTo: PAY_TO,
+      price: "$0.15",
+      network: BASE_NETWORK,
+    },
+    description: "日本向けスマートマネーシグナル",
+  },
+  x402Server,
+);

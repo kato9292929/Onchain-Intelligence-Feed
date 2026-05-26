@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withX402 } from "x402-next";
+import { withX402 } from "@x402/next";
 import { getWeeklyData } from "@/lib/nansen";
 import { generateWeeklyReport } from "@/lib/claude";
 import { getCache, setCache, TTL } from "@/lib/cache";
 import { today } from "@/lib/utils";
-import { PAYMENT_ADDRESS, FACILITATOR, routeConfig } from "@/lib/x402";
+import { PAY_TO, BASE_NETWORK, x402Server } from "@/lib/x402";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -58,4 +58,16 @@ async function handler(_req: NextRequest): Promise<NextResponse> {
   });
 }
 
-export const GET = withX402(handler, PAYMENT_ADDRESS, routeConfig("$0.50", "週次詳細レポート"), FACILITATOR);
+export const GET = withX402(
+  handler,
+  {
+    accepts: {
+      scheme: "exact",
+      payTo: PAY_TO,
+      price: "$0.50",
+      network: BASE_NETWORK,
+    },
+    description: "週次オンチェーンレポート（詳細分析、24時間キャッシュ）",
+  },
+  x402Server,
+);
